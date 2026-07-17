@@ -643,5 +643,73 @@
   }
 </script>
 
+<!-- ElevenLabs Agent Widget -->
+<style>
+  #el-open-btn{position:fixed;right:22px;bottom:22px;width:60px;height:60px;border-radius:50%;background:var(--cyan);color:#04121a;border:none;box-shadow:0 10px 30px rgba(94,234,212,0.18);font-size:26px;cursor:pointer;z-index:200}
+  #el-modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,12,0.6);z-index:210}
+  .el-modal-inner{width:min(920px,96vw);height:min(680px,86vh);background:linear-gradient(180deg, rgba(10,15,28,0.98), rgba(16,22,36,0.98));border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative}
+  .el-close{position:absolute;right:10px;top:10px;background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer}
+  #el-iframe{width:100%;height:100%;border:0;background:white}
+  .el-hidden{display:none}
+  .el-fallback{display:flex;gap:10px;align-items:center;justify-content:center;padding:18px;color:var(--muted);}
+</style>
+
+<div id="elevenlabs-widget" aria-hidden="false">
+  <button id="el-open-btn" aria-label="Talk to agent">💬</button>
+  <div id="el-modal" class="el-hidden" role="dialog" aria-modal="true">
+    <div class="el-modal-inner">
+      <button id="el-close-btn" class="el-close" aria-label="Close">✕</button>
+      <div id="el-frame-wrap" style="width:100%;height:100%;display:flex;flex-direction:column;">
+        <iframe id="el-iframe" src="https://elevenlabs.io/app/talk-to?agent_id=agent_8901kxqsjmmaegftf4v3cv3as8zp&branch_id=agtbrch_2501kxqsjn92ema99np9sk0vrn6f" title="ElevenLabs Agent" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+        <div id="el-fallback" class="el-fallback el-hidden">
+          <span>Embedding blocked — </span>
+          <a id="el-open-link" href="#" target="_blank" rel="noopener">Open agent in a new tab</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    const openBtn = document.getElementById('el-open-btn');
+    const modal = document.getElementById('el-modal');
+    const closeBtn = document.getElementById('el-close-btn');
+    const iframe = document.getElementById('el-iframe');
+    const fallback = document.getElementById('el-fallback');
+    const openLink = document.getElementById('el-open-link');
+    const agentUrl = iframe.src;
+
+    openBtn.addEventListener('click', () => {
+      modal.classList.remove('el-hidden');
+      // try to detect if embedding is allowed by waiting for iframe load
+      let loaded = false;
+      const onLoad = () => { loaded = true; iframe.removeEventListener('load', onLoad); };
+      iframe.addEventListener('load', onLoad);
+      // if load doesn't fire within 2s, show fallback link
+      setTimeout(() => {
+        if (!loaded) {
+          fallback.classList.remove('el-hidden');
+          openLink.href = agentUrl;
+        }
+      }, 2000);
+    });
+
+    closeBtn.addEventListener('click', () => {
+      modal.classList.add('el-hidden');
+      fallback.classList.add('el-hidden');
+    });
+
+    // also close on Escape
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') { modal.classList.add('el-hidden'); fallback.classList.add('el-hidden'); } });
+
+    // If iframe explicitly fails to load (some browsers may not call onload), provide direct open
+    iframe.addEventListener('error', () => {
+      fallback.classList.remove('el-hidden');
+      openLink.href = agentUrl;
+    });
+  })();
+</script>
+
 </body>
 </html>
